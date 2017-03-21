@@ -1,0 +1,8 @@
+{
+  "makefolders":[
+    "postgres-storage",
+    "galaxy-storage",
+    "ftp_data"
+  ],
+  "copyfiles":[]
+}

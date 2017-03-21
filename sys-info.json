@@ -1,0 +1,4 @@
+{
+  runningcontainers:["§§INSTANCE-proftpd", "§§INSTANCE-postgres", "§§INSTANCE-galaxy"],
+  supportcontainers:[]    
+}
