@@ -8,7 +8,7 @@ services:
   # proftpd container
   §§INSTANCE-proftpd:
 #    build: proftpd
-    image: bibbox/galaxy/proftpd
+    image: bibbox/galaxy-proftpd
     environment:
         - proftpd_db_connection=galaxy@db
         - proftpd_db_username=galaxy
@@ -51,7 +51,7 @@ services:
 #    image: postgres
 # This comes with an initialization to quickly populate the database on first start
 #    build: postgres-galaxy
-    image: bibbox/galaxy/postgres
+    image: bibbox/galaxy-postgres
     container_name: §§INSTANCE-galaxy-postgres
     environment:
         - POSTGRES_PASSWORD=chaopagoosaequuashie
@@ -67,7 +67,7 @@ services:
   # slurm container
   §§INSTANCE-slurm:
 #    build: slurm-galaxy
-    image: bibbox/galaxy/slurm
+    image: bibbox/galaxy-slurm
     environment: {}
     container_name: §§INSTANCE-galaxy-slurm
     volumes:
@@ -80,7 +80,7 @@ services:
   # Main Galaxy container
   §§INSTANCE-galaxy:
 #    build: ../galaxy
-    image: bibbox/galaxy/galaxy
+    image: bibbox/galaxy
     environment:
         #    Insert here your environment variables to change Galaxy's behaviour.
         #    For example to personalise Galaxy by changing the branding with
