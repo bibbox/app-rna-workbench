@@ -18,8 +18,10 @@ services:
         - proftpd_passive_port_low=§§PORT3-0
         - proftpd_passive_port_high=§§PORT3_10
     container_name: §§INSTANCE-galaxy-proftpd
-    volumes:
-        - ./ftp_data:/export/ftp
+    depends_on:
+        - §§INSTANCE-galaxy-data
+    volumes_from:
+        - §§INSTANCE-galaxy-data
     expose:
         - 21
         - 22
@@ -57,8 +59,10 @@ services:
         - POSTGRES_PASSWORD=chaopagoosaequuashie
         - POSTGRES_USER=galaxy
         - POSTGRES_DB=galaxy
-    volumes:
-        - ./postgres-storage:/var/lib/postgresql/data
+    depends_on:
+        - §§INSTANCE-galaxy-data
+    volumes_from:
+        - §§INSTANCE-galaxy-data
     hostname: §§INSTANCE-galaxy-postgres
     restart: unless-stopped
     networks:
@@ -66,12 +70,13 @@ services:
 
   # slurm container
   §§INSTANCE-galaxy-slurm:
-#    build: slurm-galaxy
     image: bibbox/galaxy-slurm
     environment: {}
     container_name: §§INSTANCE-galaxy-slurm
-    volumes:
-        - ./galaxy-storage/:/export
+    depends_on:
+        - §§INSTANCE-galaxy-data
+    volumes_from:
+        - §§INSTANCE-galaxy-data
     restart: unless-stopped
     networks:
       - bibbox-default-network
@@ -102,16 +107,42 @@ services:
         - §§INSTANCE-galaxy-postgres:db
         - §§INSTANCE-galaxy-slurm
     container_name: §§INSTANCE-galaxy
-    volumes:
-        - ./ftp_data:/export/ftp
+    # volumes:
+        # - ./ftp_data:/export/ftp
         # This is the directory where all your files from Galaxy will be stored
         # on your host system
-        - ./galaxy-storage/:/export/
+        # - ./galaxy-storage/:/export/
+    depends_on:
+        - §§INSTANCE-galaxy-data
+    volumes_from:
+        - §§INSTANCE-galaxy-data
     hostname: §§INSTANCE-galaxy
     privileged: True
     restart: unless-stopped
     networks:
       - bibbox-default-network
+      
+  §§INSTANCE-galaksio:
+    image: bibbox/galaxy-galaksio
+    container_name: §§INSTANCE-galaksio
+    links:
+        - §§INSTANCE-galaxy:galaxy_machine
+    depends_on:
+        - §§INSTANCE-galaxy
+    volumes_from:
+        - §§INSTANCE-galaxy-data
+    ports:
+        - "§§PORT4:80"
+    restart: unless-stopped
+    networks:
+      - bibbox-default-network
 
-volumes:
-  ftp_data: {}
+  §§INSTANCE-galaxy-data:
+    image: busybox
+    container_name: §§INSTANCE-galaxy-data
+    volumes:
+        - ./galaxy-storage/postgres-storage:/var/lib/postgresql/data
+        - ./galaxy-storage/ftp-data:/export/ftp
+        - ./galaxy-storage/galaxy-data/:/export/
+        - ./galaxy-storage/galaxy-custom-tools/:/local_tools
+        - ./galaxy-storage/galaksio-data:/usr/local/apache2/htdocs/server/conf/
