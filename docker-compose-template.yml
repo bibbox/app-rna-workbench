@@ -132,7 +132,7 @@ services:
     volumes_from:
         - §§INSTANCE-galaxy-data
     ports:
-        - "§§PORT4:80"
+        - "§§PORT6:80"
     restart: unless-stopped
     networks:
         - bibbox-default-network
