@@ -80,13 +80,13 @@
     },
     {
       "id": "§§PORT4",
-      "url": "§§INSTANCE-galaxy1",
+      "url": "§§INSTANCE",
       "protocol": "HTTP",
       "proxy" : "PRIMARY"
     },
     {
       "id": "§§PORT5",
-      "url": "§§INSTANCE-galaxy2",
+      "url": "supervisor.§§INSTANCE",
       "protocol": "HTTP",
       "proxy" : "PRIMARY"
     }

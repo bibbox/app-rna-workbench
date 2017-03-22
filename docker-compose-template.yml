@@ -16,7 +16,7 @@ services:
         - proftpd_files_dir=/export/ftp
         - proftpd_use_sftp=True
         - proftpd_passive_port_low=§§PORT3-0
-        - proftpd_passive_port_high=§§PORT3-10
+        - proftpd_passive_port_high=§§PORT3_10
     container_name: §§INSTANCE-galaxy-proftpd
     volumes:
         - ./ftp_data:/export/ftp
