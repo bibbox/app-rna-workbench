@@ -92,7 +92,7 @@
     },
     {
       "id": "§§PORT6",
-      "url": "§§INSTANCE",
+      "url": "galaksio.§§INSTANCE",
       "protocol": "HTTP",
       "proxy" : "PRIMARY"
     }
