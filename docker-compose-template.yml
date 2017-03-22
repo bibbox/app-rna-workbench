@@ -43,7 +43,7 @@ services:
         - §§INSTANCE-galaxy-postgres:db
     restart: unless-stopped
     networks:
-      - bibbox-default-network
+        - bibbox-default-network
     hostname: §§INSTANCE-galaxy-proftpd
 
   §§INSTANCE-galaxy-postgres:
@@ -66,7 +66,7 @@ services:
     hostname: §§INSTANCE-galaxy-postgres
     restart: unless-stopped
     networks:
-      - bibbox-default-network
+        - bibbox-default-network
 
   # slurm container
   §§INSTANCE-galaxy-slurm:
@@ -79,7 +79,7 @@ services:
         - §§INSTANCE-galaxy-data
     restart: unless-stopped
     networks:
-      - bibbox-default-network
+        - bibbox-default-network
     hostname: §§INSTANCE-galaxy-slurm
 
   # Main Galaxy container
@@ -120,11 +120,11 @@ services:
     privileged: True
     restart: unless-stopped
     networks:
-      - bibbox-default-network
+        - bibbox-default-network
       
-  §§INSTANCE-galaksio:
+  §§INSTANCE-galaxy-galaksio:
     image: bibbox/galaxy-galaksio
-    container_name: §§INSTANCE-galaksio
+    container_name: §§INSTANCE-galaxy-galaksio
     links:
         - §§INSTANCE-galaxy:galaxy_machine
     depends_on:
@@ -135,7 +135,7 @@ services:
         - "§§PORT4:80"
     restart: unless-stopped
     networks:
-      - bibbox-default-network
+        - bibbox-default-network
 
   §§INSTANCE-galaxy-data:
     image: busybox
