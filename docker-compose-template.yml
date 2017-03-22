@@ -6,7 +6,7 @@ networks:
 
 services:
   # proftpd container
-  §§INSTANCE-proftpd:
+  §§INSTANCE-galaxy-proftpd:
 #    build: proftpd
     image: bibbox/galaxy-proftpd
     environment:
@@ -38,13 +38,13 @@ services:
         - "§§PORT3-9:30009"
         - "§§PORT3_10:30010"
     links:
-        - §§INSTANCE-postgres:db
+        - §§INSTANCE-galaxy-postgres:db
     restart: unless-stopped
     networks:
       - bibbox-default-network
     hostname: §§INSTANCE-galaxy-proftpd
 
-  §§INSTANCE-postgres:
+  §§INSTANCE-galaxy-postgres:
 # Using the official postgres image. This needs to be populated by calling
 #  docker-compose run galaxy install_db.sh
 # on first run
@@ -65,7 +65,7 @@ services:
       - bibbox-default-network
 
   # slurm container
-  §§INSTANCE-slurm:
+  §§INSTANCE-galaxy-slurm:
 #    build: slurm-galaxy
     image: bibbox/galaxy-slurm
     environment: {}
@@ -99,8 +99,8 @@ services:
         - "§§PORT4:80" # nginx
         - "§§PORT5:9002" # supervisor web-interface - not super useful in compose mode
     links:
-        - §§INSTANCE-postgres:db
-        - §§INSTANCE-slurm
+        - §§INSTANCE-galaxy-postgres:db
+        - §§INSTANCE-galaxy-slurm
     container_name: §§INSTANCE-galaxy
     volumes:
         - ./ftp_data:/export/ftp
