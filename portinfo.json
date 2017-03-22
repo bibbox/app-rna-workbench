@@ -73,8 +73,8 @@
       "proxy" : "PRIMARY"
     },
     {
-      "id": "§§PORT3-10",
-      "url": "§§INSTANCE-proftpd3-10",
+      "id": "§§PORT3_10",
+      "url": "§§INSTANCE-proftpd3_10",
       "protocol": "HTTP",
       "proxy" : "PRIMARY"
     },

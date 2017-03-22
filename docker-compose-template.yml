@@ -36,7 +36,7 @@ services:
         - "§§PORT3-7:30007"
         - "§§PORT3-8:30008"
         - "§§PORT3-9:30009"
-        - "§§PORT3-10:30010"
+        - "§§PORT3_10:30010"
     links:
         - §§INSTANCE-postgres:db
     restart: unless-stopped
