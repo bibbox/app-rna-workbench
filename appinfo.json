@@ -1,10 +1,11 @@
 {
-		"name": "Galaxy",
-		"short_name": "Galaxy",
-		"version": "v17.01",
-		"description": "",
+	"name": "Galaxy",
+	"short_name": "Galaxy",
+	"version": "v17.01",
+	"description": "",
         "short_description": "",
-		"catalogue_url": "https://bio.tools/tool/Galaxy/version/none",
-		"application_url": "https://galaxyproject.org",
-		"tags": ["Galaxy"]
+	"catalogue_url": "https://bio.tools/tool/Galaxy/version/none",
+	"application_url": "https://galaxyproject.org",
+	"tags": ["Galaxy"],
+	"application_documentation_url": "https://galaxyproject.org/"
 }
