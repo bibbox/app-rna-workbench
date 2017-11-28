@@ -1,8 +1,8 @@
 {
   "makefolders":[
     "galaxy-storage",
-    "galaxy-storage/postgres-storage"
-    "galaxy-storage/ftp-data"
+    "galaxy-storage/postgres-storage",
+    "galaxy-storage/ftp-data",
     "galaxy-storage/galaxy-data",
     "galaxy-storag/galaxy-custom-toolse",
     "galaxy-storag/galaksio-datae"
