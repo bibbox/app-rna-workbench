@@ -85,7 +85,7 @@ services:
   # Main Galaxy container
   §§INSTANCE-galaxy:
 #    build: ../galaxy
-    image: bibbox/galaxy
+    image: bgruening/galaxy-stable
     environment:
         #    Insert here your environment variables to change Galaxy's behaviour.
         #    For example to personalise Galaxy by changing the branding with
