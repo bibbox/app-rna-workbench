@@ -1,4 +1,4 @@
-version: '2'
+version: '3'
 
 networks:
     bibbox-default-network:
@@ -8,13 +8,14 @@ services:
   # proftpd container
   §§INSTANCE-galaxy-proftpd:
 #    build: proftpd
-    image: bibbox/galaxy-proftpd
+    image: quay.io/galaxy/proftpd:${§§GALAXY_DOCKER_TAG:-latest}
     environment:
-        - proftpd_db_connection=galaxy@db
-        - proftpd_db_username=galaxy
-        - proftpd_db_password=chaopagoosaequuashie
-        - proftpd_files_dir=/export/ftp
+        - proftpd_db_connection=${§§GALAXY_PROFTP_USERNAME:-galaxy}@galaxy-postgres
+        - proftpd_db_username=${§§GALAXY_PROFTP_DB_USERNAME:-galaxy}
+        - proftpd_db_password=${§§GALAXY_PROFTP_DB_PASSWORD:-chaopagoosaequuashie}
+        - proftpd_files_dir=/export/ftp/
         - proftpd_use_sftp=True
+        - proftpd_generate_ssh_key=False
         - proftpd_passive_port_low=§§PORT3-0
         - proftpd_passive_port_high=§§PORT3_10
     container_name: §§INSTANCE-galaxy-proftpd
@@ -39,38 +40,72 @@ services:
         - "§§PORT3-8:30008"
         - "§§PORT3-9:30009"
         - "§§PORT3_10:30010"
-    links:
-        - §§INSTANCE-galaxy-postgres:db
-    restart: unless-stopped
+#    links:
+#        - §§INSTANCE-galaxy-postgres:db
+    restart: always
     networks:
         - bibbox-default-network
     hostname: §§INSTANCE-galaxy-proftpd
+    deploy:
+        restart_policy:
+            condition: any
+        mode: replicated
+        replicas: 1
+        placement:
+            constraints: [node.role == manager]
+    labels:
+        kompose.service.type: nodeport
 
   §§INSTANCE-galaxy-postgres:
-# Using the official postgres image. This needs to be populated by calling
-#  docker-compose run galaxy install_db.sh
-# on first run
-#    image: postgres
-# This comes with an initialization to quickly populate the database on first start
-#    build: postgres-galaxy
-    image: bibbox/galaxy-postgres
+    # If you are using the official postgres image, it needs to be populated by calling
+    # docker-compose run galaxy install_db.sh
+    # on first run
+    image: quay.io/galaxy/postgres:${§§GALAXY_DOCKER_TAG:-latest}
     container_name: §§INSTANCE-galaxy-postgres
     environment:
-        - POSTGRES_PASSWORD=chaopagoosaequuashie
-        - POSTGRES_USER=galaxy
-        - POSTGRES_DB=galaxy
+        - POSTGRES_PASSWORD=${§§GALAXY_DB_PASSWORD:-chaopagoosaequuashie}
+        - POSTGRES_USER=${§§GALAXY_DB_USERNAME:-galaxy}
+        - POSTGRES_DB=${§§GALAXY_DB_NAME:-galaxy}
     depends_on:
         - §§INSTANCE-galaxy-data
     volumes_from:
         - §§INSTANCE-galaxy-data
     hostname: §§INSTANCE-galaxy-postgres
-    restart: unless-stopped
+    deploy:
+        restart_policy:
+            condition: any
+        mode: replicated
+        replicas: 1
+        placement:
+            constraints: [node.role == manager]
     networks:
         - bibbox-default-network
+    
+  # PostgreSQL admin suite
+  §§INSTANCE-pgadmin4:
+    image: thajeztah/pgadmin4
+    container_name: §§INSTANCE-pgadmin4
+    ports:
+        - "§§PORTS6:5050"
+#    links:
+#        - galaxy-postgres
+    # ToDO, not sure why this is failing
+    #volumes:
+        #- ./pgadmin:/pgadmin
+    #restart: unless-stopped
+    networks:
+      - galaxy
+    deploy:
+      restart_policy:
+        condition: any
+      placement:
+        constraints: [node.role == manager]
+    labels: 
+        kompose.service.type: nodeport
 
   # slurm container
   §§INSTANCE-galaxy-slurm:
-    image: bibbox/galaxy-slurm
+    image: quay.io/galaxy/slurm:${§§GALAXY_DOCKER_TAG:-latest}
     environment: {}
     container_name: §§INSTANCE-galaxy-slurm
     depends_on:
@@ -80,48 +115,14 @@ services:
     restart: unless-stopped
     networks:
         - bibbox-default-network
+    deploy:
+        restart_policy:
+            condition: any
+        placement:
+            constraints: [node.role == manager]
     hostname: §§INSTANCE-galaxy-slurm
 
-  # Main Galaxy container
-  §§INSTANCE-galaxy:
-#    build: ../galaxy
-    image: bgruening/galaxy-stable
-    environment:
-        #    Insert here your environment variables to change Galaxy's behaviour.
-        #    For example to personalise Galaxy by changing the branding with
-        #    - GALAXY_CONFIG_BRAND=FOO
-        - NONUSE=proftp,postgres,slurmd,slurmctld
-        - GALAXY_CONFIG_FTP_UPLOAD_DIR=/export/ftp
-        - GALAXY_CONFIG_ALLOW_USER_DATASET_PURGE=True
-        - GALAXY_CONFIG_ALLOW_LIBRARY_PATH_PASTE=True
-        - GALAXY_CONFIG_ENABLE_USER_DELETION=True
-        - GALAXY_CONFIG_ENABLE_BETA_WORKFLOW_MODULES=True
-        - GALAXY_CONFIG_DATABASE_CONNECTION=postgresql://galaxy:chaopagoosaequuashie@db/galaxy?client_encoding=utf8
-        - GALAXY_DEFAULT_ADMIN_USER=admin@galaxy.org
-        - GALAXY_DEFAULT_ADMIN_PASSWORD=admin
-        - GALAXY_DEFAULT_ADMIN_KEY=admin
-    ports:
-        - "§§PORT4:80" # nginx
-        - "§§PORT5:9002" # supervisor web-interface - not super useful in compose mode
-    links:
-        - §§INSTANCE-galaxy-postgres:db
-        - §§INSTANCE-galaxy-slurm
-    container_name: §§INSTANCE-galaxy
-    # volumes:
-        # - ./ftp_data:/export/ftp
-        # This is the directory where all your files from Galaxy will be stored
-        # on your host system
-        # - ./galaxy-storage/:/export/
-    depends_on:
-        - §§INSTANCE-galaxy-data
-    volumes_from:
-        - §§INSTANCE-galaxy-data
-    hostname: §§INSTANCE-galaxy
-    privileged: True
-    restart: unless-stopped
-    networks:
-        - bibbox-default-network
-      
+  #TODO
   §§INSTANCE-galaxy-galaksio:
     image: bibbox/galaxy-galaksio
     container_name: §§INSTANCE-galaxy-galaksio
@@ -137,12 +138,143 @@ services:
     networks:
         - bibbox-default-network
 
+  §§INSTANCE-galaxy-htcondor:
+    image: quay.io/bgruening/galaxy-htcondor:${§§GALAXY_DOCKER_TAG:-latest}
+    container_name: §§INSTANCE-galaxy-htcondor
+    hostname: §§INSTANCE-galaxy-htcondor
+    volumes_from:
+        - §§INSTANCE-galaxy-data
+    #restart: unless-stopped
+    networks:
+      - bibbox-default-galaxy
+    deploy:
+      repl
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: [node.role == worker]
+
+
+  §§INSTANCE-galaxy-htcondor-executor:
+    image: quay.io/bgruening/galaxy-htcondor-executor:${§§GALAXY_DOCKER_TAG:-latest}
+    # privileged is needed to run Docker jobs, moreover HTCondor wants
+    # a RW cgroups mount. A RO cgroups mount throws an error in ProcD for running jobs.
+    privileged: True
+    #${PRIVILEGED_CONDOR_CONTAINER:-False}
+    environment:
+        - CONDOR_HOST=§§INSTANCE-galaxy-htcondor
+    volumes:
+        - ${EXPORT_DIR:-/export}/:/export
+        - /var/run/docker.sock:/var/run/docker.sock
+    #restart: unless-stopped
+    networks:
+      - bibbox-default-galaxy
+    deploy:
+      restart_policy:
+        condition: any
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: [node.role == worker]
+  
+  §§INSTANCE-galaxy-htcondor-executor-big:
+    image: quay.io/bgruening/galaxy-htcondor-executor:${§§GALAXY_DOCKER_TAG:-latest}
+    # privileged is needed to run Docker jobs, moreover HTCondor wants
+    # a RW cgroups mount. A RO cgroups mount throws an error in ProcD for running jobs.
+    privileged: True
+    #${PRIVILEGED_CONDOR_CONTAINER:-False}
+    environment:
+        - CONDOR_HOST=§§INSTANCE-galaxy-htcondor
+        - CONDOR_CPUS=2
+        - CONDOR_MEMORY=2048
+    volumes:
+        - ${EXPORT_DIR:-/export}/:/export
+        - /var/run/docker.sock:/var/run/docker.sock
+    #restart: unless-stopped
+    networks:
+      - bibbox-default-galaxy
+    deploy:
+      restart_mode:
+        condition: any
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: [node.role == worker]
+
+
+  # Message queue for better performance
+  §§INSTANCE-rabbitmq:
+    image: rabbitmq:alpine
+    container_name: §§INSTANCE-galaxy-rabbitmq
+    hostname: §§INSTANCE-rabbitmq
+    environment:
+        - RABBITMQ_DEFAULT_USER=${§§GALAXY_RABBITMQ_USERNAME:-galaxy}
+        - RABBITMQ_DEFAULT_PASS=${§§GALAXY_RABBITMQ_PASSWORD:-vaiJa3ieghai2ief0jao}
+        - RABBITMQ_DEFAULT_VHOST=galaxy
+    volumes:
+        - ${EXPORT_DIR:-/export}/rabbitmq:/var/lib/rabbitmq
+    networks:
+      - bibbox-default-galaxy
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: [node.role == worker]
+    
+      # This container provides the galaxy uwsgi webhandlers, job handlers, nginx
+  §§INSTANCE-galaxy-web:
+    # build: galaxy-web
+    image: quay.io/bgruening/galaxy-web:${§§GALAXY_DOCKER_TAG:-latest}
+    environment:
+        # In case the galaxy-init container is not used, you need to include "sleeplock" to NONUSE
+        - NONUSE=proftpd,postgres,slurmd,slurmctld
+        - GALAXY_DEFAULT_ADMIN_USER=admin@galaxy.org
+        - GALAXY_DEFAULT_ADMIN_PASSWORD=admin
+        - GALAXY_DEFAULT_ADMIN_KEY=admin
+        - GALAXY_HANDLER_NUMPROCS=2
+        - UWSGI_PROCESSES=4
+        - GALAXY_CONFIG_ALLOW_USER_DATASET_PURGE=True
+        - GALAXY_CONFIG_ALLOW_LIBRARY_PATH_PASTE=True
+        - GALAXY_CONFIG_ENABLE_USER_DELETION=True
+        - GALAXY_CONFIG_ENABLE_BETA_WORKFLOW_MODULES=True
+        - GALAXY_CONFIG_DATABASE_CONNECTION=postgresql://${§§GALAXY_DB_USERNAME:-galaxy}:${§§GALAXY_DB_PASSWORD:-chaopagoosaequuashie}@§§INSTANCE-galaxy-postgres/galaxy?client_encoding=utf8
+        - GALAXY_CONFIG_TOOL_DATA_TABLE_CONFIG_PATH=/etc/galaxy/tool_data_table_conf.xml
+        # Configurate admin and master api key. Can be overridden in galaxy.ini
+        - GALAXY_CONFIG_ADMIN_USERS=admin@galaxy.org
+        - GALAXY_CONFIG_MASTER_API_KEY=HSNiugRFvgT574F43jZ7N9F3
+        - GALAXY_CONFIG_DATABASE_AUTO_MIGRATE=${GALAXY_CONFIG_DATABASE_AUTO_MIGRATE:-false}
+        - GALAXY_CONFIG_AMQP_INTERNAL_CONNECTION=amqp://${§§GALAXY_RABBITMQ_USERNAME:-galaxy}:${§§GALAXY_RABBITMQ_PASSWORD:-vaiJa3ieghai2ief0jao}@§§INSTANCE-rabbitmq/galaxy 
+        # Condor
+        - GALAXY_DESTINATIONS_DEFAULT=${GALAXY_DESTINATIONS_DEFAULT:-slurm_cluster}
+        - GALAXY_RUNNERS_ENABLE_CONDOR=${GALAXY_RUNNERS_ENABLE_CONDOR:-False}
+        - GALAXY_RUNNERS_ENABLE_SLURM=${GALAXY_RUNNERS_ENABLE_SLURM:-False}
+        - GALAXY_RUNNERS_ENABLE_K8=${GALAXY_RUNNERS_ENABLE_K8:-False}
+        - ENABLE_CONDOR=true
+        - CONDOR_HOST=§§INSTANCE-galaxy-htcondor
+        - GALAXY_CONDOR_UNIVERSE=vanilla
+        - GALAXY_DOCKER_ENABLED=${GALAXY_DOCKER_ENABLED:-False}
+        - GALAXY_CONFIG_CLEANUP_JOB=${GALAXY_CONFIG_CLEANUP_JOB:-onsuccess}
+        - GALAXY_CONFIG_ENABLE_BETA_MULLED_CONTAINERS=${GALAXY_CONFIG_ENABLE_BETA_MULLED_CONTAINERS:-False}
+        - GALAXY_CONFIG_TOOL_CONFIG_FILE=${GALAXY_CONFIG_TOOL_CONFIG_FILE:-config/tool_conf.xml.sample,config/shed_tool_conf.xml}
+        - GALAXY_SINGULARITY_VOLUMES=${GALAXY_SINGULARITY_VOLUMES:-\$tool_directory:ro,\$working_directory:rw,\$default_file_path:rw}
+
+        # Proxy Prefix settings
+        #- PROXY_PREFIX=${PROXY_PREFIX:-""}
+        #- GALAXY_CONFIG_NGINX_X_ACCEL_REDIRECT_BASE=${GALAXY_CONFIG_NGINX_X_ACCEL_REDIRECT_BASE:-""}
+        #- GALAXY_CONFIG_NGINX_X_ARCHIVE_FILES_BASE=${GALAXY_CONFIG_NGINX_X_ARCHIVE_FILES_BASE:-""}
+        #- GALAXY_CONFIG_NGINX_UPLOAD_PATH=${GALAXY_CONFIG_NGINX_UPLOAD_PATH:-""}
+        # k8s
+        #- GALAXY_DESTINATIONS_DOCKER_DEFAULT=${GALAXY_DESTINATIONS_DOCKER_DEFAULT:-slurm_cluster}
+        #- GALAXY_DESTINATIONS_NO_DOCKER_DEFAULT=${GALAXY_DESTINATIONS_NO_DOCKER_DEFAULT:-slurm_cluster}
+        #- GALAXY_CONFIG_CONTAINERS_RESOLVERS_CONFIG_FILE=${GALAXY_CONFIG_CONTAINERS_RESOLVERS_CONFIG_FILE:-None}
+        # Hack for pykube - https://github.com/kelproject/pykube/issues/29
+        - PYKUBE_KUBERNETES_SERVICE_HOST=kubernetes
+        # Just for testing...
+  
   §§INSTANCE-galaxy-data:
-    image: busybox
+    image: quay.io/bgruening/galaxy-init:${§§GALAXY_DOCKER_TAG:-latest}
     container_name: §§INSTANCE-galaxy-data
     volumes:
-        - ./galaxy-storage/postgres-storage:/var/lib/postgresql/data
-        - ./galaxy-storage/ftp-data:/export/ftp
-        - ./galaxy-storage/galaxy-data/:/export/
-        - ./galaxy-storage/galaxy-custom-tools/:/local_tools
-        - ./galaxy-storage/galaksio-data:/usr/local/apache2/htdocs/server/conf/
+        - ${§§GALAXY_STORAGE_DIR:-/export}/:/export/
+        
+   
