@@ -1,148 +1,25 @@
-version: '2'
+version: '2.1'
 
 networks:
-    bibbox-default-network:
-      external: true
+  bibbox-default-network:
+    external: true
 
 services:
-  # proftpd container
-  §§INSTANCE-galaxy-proftpd:
-#    build: proftpd
-    image: bibbox/galaxy-proftpd
-    environment:
-        - proftpd_db_connection=galaxy@db
-        - proftpd_db_username=galaxy
-        - proftpd_db_password=chaopagoosaequuashie
-        - proftpd_files_dir=/export/ftp
-        - proftpd_use_sftp=True
-        - proftpd_passive_port_low=§§PORT3-0
-        - proftpd_passive_port_high=§§PORT3_10
-    container_name: §§INSTANCE-galaxy-proftpd
-    depends_on:
-        - §§INSTANCE-galaxy-data
-    volumes_from:
-        - §§INSTANCE-galaxy-data
-    expose:
-        - 21
-        - 22
-    ports:
-        - "§§PORT1:21"
-        - "§§PORT2:22"
-        - "§§PORT3-0:30000"
-        - "§§PORT3-1:30001"
-        - "§§PORT3-2:30002"
-        - "§§PORT3-3:30003"
-        - "§§PORT3-4:30004"
-        - "§§PORT3-5:30005"
-        - "§§PORT3-6:30006"
-        - "§§PORT3-7:30007"
-        - "§§PORT3-8:30008"
-        - "§§PORT3-9:30009"
-        - "§§PORT3_10:30010"
-    links:
-        - §§INSTANCE-galaxy-postgres:db
-    restart: unless-stopped
-    networks:
-        - bibbox-default-network
-    hostname: §§INSTANCE-galaxy-proftpd
-
-  §§INSTANCE-galaxy-postgres:
-# Using the official postgres image. This needs to be populated by calling
-#  docker-compose run galaxy install_db.sh
-# on first run
-#    image: postgres
-# This comes with an initialization to quickly populate the database on first start
-#    build: postgres-galaxy
-    image: bibbox/galaxy-postgres
-    container_name: §§INSTANCE-galaxy-postgres
-    environment:
-        - POSTGRES_PASSWORD=chaopagoosaequuashie
-        - POSTGRES_USER=galaxy
-        - POSTGRES_DB=galaxy
-    depends_on:
-        - §§INSTANCE-galaxy-data
-    volumes_from:
-        - §§INSTANCE-galaxy-data
-    hostname: §§INSTANCE-galaxy-postgres
-    restart: unless-stopped
-    networks:
-        - bibbox-default-network
-
-  # slurm container
-  §§INSTANCE-galaxy-slurm:
-    image: bibbox/galaxy-slurm
-    environment: {}
-    container_name: §§INSTANCE-galaxy-slurm
-    depends_on:
-        - §§INSTANCE-galaxy-data
-    volumes_from:
-        - §§INSTANCE-galaxy-data
-    restart: unless-stopped
-    networks:
-        - bibbox-default-network
-    hostname: §§INSTANCE-galaxy-slurm
-
-  # Main Galaxy container
   §§INSTANCE-galaxy:
-#    build: ../galaxy
-    image: bgruening/galaxy-stable
-    environment:
-        #    Insert here your environment variables to change Galaxy's behaviour.
-        #    For example to personalise Galaxy by changing the branding with
-        #    - GALAXY_CONFIG_BRAND=FOO
-        - NONUSE=proftp,postgres,slurmd,slurmctld
-        - GALAXY_CONFIG_FTP_UPLOAD_DIR=/export/ftp
-        - GALAXY_CONFIG_ALLOW_USER_DATASET_PURGE=True
-        - GALAXY_CONFIG_ALLOW_LIBRARY_PATH_PASTE=True
-        - GALAXY_CONFIG_ENABLE_USER_DELETION=True
-        - GALAXY_CONFIG_ENABLE_BETA_WORKFLOW_MODULES=True
-        - GALAXY_CONFIG_DATABASE_CONNECTION=postgresql://galaxy:chaopagoosaequuashie@db/galaxy?client_encoding=utf8
-        - GALAXY_DEFAULT_ADMIN_USER=admin@galaxy.org
-        - GALAXY_DEFAULT_ADMIN_PASSWORD=admin
-        - GALAXY_DEFAULT_ADMIN_KEY=admin
-    ports:
-        - "§§PORT4:80" # nginx
-        - "§§PORT5:9002" # supervisor web-interface - not super useful in compose mode
-    links:
-        - §§INSTANCE-galaxy-postgres:db
-        - §§INSTANCE-galaxy-slurm
+    image: bgruening/galaxy-stable:latest # §§
     container_name: §§INSTANCE-galaxy
-    # volumes:
-        # - ./ftp_data:/export/ftp
-        # This is the directory where all your files from Galaxy will be stored
-        # on your host system
-        # - ./galaxy-storage/:/export/
-    depends_on:
-        - §§INSTANCE-galaxy-data
-    volumes_from:
-        - §§INSTANCE-galaxy-data
-    hostname: §§INSTANCE-galaxy
-    privileged: True
-    restart: unless-stopped
     networks:
         - bibbox-default-network
-      
-  §§INSTANCE-galaxy-galaksio:
-    image: bibbox/galaxy-galaksio
-    container_name: §§INSTANCE-galaxy-galaksio
-    links:
-        - §§INSTANCE-galaxy:galaxy_machine
-    depends_on:
-        - §§INSTANCE-galaxy
     volumes_from:
-        - §§INSTANCE-galaxy-data
+      - §§INSTANCE-galaxy-data
+    expose:
+        - 80
     ports:
-        - "§§PORT6:80"
-    restart: unless-stopped
-    networks:
-        - bibbox-default-network
+        - §§PORT4:80
+    restart: on-failure
 
   §§INSTANCE-galaxy-data:
-    image: busybox
+    image: quay.io/bgruening/galaxy-init:${GALAXY_DOCKER_TAG:-latest}
     container_name: §§INSTANCE-galaxy-data
     volumes:
-        - ./galaxy-storage/postgres-storage:/var/lib/postgresql/data
-        - ./galaxy-storage/ftp-data:/export/ftp
-        - ./galaxy-storage/galaxy-data/:/export/
-        - ./galaxy-storage/galaxy-custom-tools/:/local_tools
-        - ./galaxy-storage/galaksio-data:/usr/local/apache2/htdocs/server/conf/
+      - data/galaxy-storage:/export
