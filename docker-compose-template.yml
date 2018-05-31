@@ -15,7 +15,7 @@ services:
     expose:
         - 80
     ports:
-        - §§PORT4:80
+        - "§§PORT4:80"
     restart: on-failure
 
   §§INSTANCE-galaxy-data:
