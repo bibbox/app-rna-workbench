@@ -2,7 +2,7 @@
 
 cd /galaxy-central/
 
-cp config/galaxy.ini.sample $GALAXY_CONFIG_FILE
+cp config/galaxy.yml.sample $GALAXY_CONFIG_FILE
 export GALAXY_CONFIG_STATIC_ENABLED=True
 export GALAXY_CONFIG_ALLOW_LIBRARY_PATH_PASTE=True
 unset GALAXY_CONFIG_NGINX_UPLOAD_STORE
