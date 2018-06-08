@@ -80,7 +80,7 @@ services:
   # Main Galaxy container
   §§INSTANCE-galaxy:
 #    build: ../galaxy
-    image: quay.io/bgruening/galaxy:compose
+    image: quay.io/bgruening/galaxy:18.05
     environment:
         #    Insert here your environment variables to change Galaxy's behaviour.
         #    For example to personalise Galaxy by changing the branding with
