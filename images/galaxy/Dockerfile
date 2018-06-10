@@ -113,8 +113,8 @@ ADD roles/ /ansible/roles
 ADD provision.yml /ansible/provision.yml
 ADD postgresql_provision.yml /ansible/postgresql_provision.yml
 
-RUN ansible-playbook /ansible/postgresql_provision.yml && \
-    ansible-playbook /ansible/provision.yml \
+RUN ansible-playbook /ansible/postgresql_provision.yml
+  RUN  ansible-playbook /ansible/provision.yml \
     --extra-vars galaxy_venv_dir=$GALAXY_VIRTUAL_ENV \
     --extra-vars galaxy_log_dir=$GALAXY_LOGS_DIR \
     --extra-vars galaxy_user_name=$GALAXY_USER \
@@ -136,8 +136,8 @@ RUN ansible-playbook /ansible/postgresql_provision.yml && \
     --extra-vars supervisor_postgres_config_path=$PG_CONF_DIR_DEFAULT/postgresql.conf \
     --extra-vars supervisor_postgres_autostart=false \
     --extra-vars nginx_use_remote_header=True \
-    --tags=galaxyextras,cvmfs -c local && \
-    apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    --tags=galaxyextras,cvmfs -c local
+ RUN   apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN mkdir /shed_tools && chown $GALAXY_USER:$GALAXY_USER /shed_tools && \
     mkdir $EXPORT_DIR/ftp/ && chown $GALAXY_USER:$GALAXY_USER $EXPORT_DIR/ftp && \
