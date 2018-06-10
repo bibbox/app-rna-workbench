@@ -9,7 +9,7 @@ MAINTAINER Björn A. Grüning, bjoern.gruening@gmail.com
 ARG GALAXY_RELEASE
 ARG GALAXY_REPO
 
-ENV GALAXY_RELEASE=${GALAXY_RELEASE:-dev} \
+ENV GALAXY_RELEASE=${GALAXY_RELEASE:-release_18.05} \
 GALAXY_REPO=${GALAXY_REPO:-https://github.com/galaxyproject/galaxy} \
 GALAXY_ROOT=/galaxy-central \
 GALAXY_CONFIG_DIR=/etc/galaxy \
@@ -20,6 +20,7 @@ ENV GALAXY_CONFIG_FILE=$GALAXY_CONFIG_DIR/galaxy.yml \
 GALAXY_CONFIG_JOB_CONFIG_FILE=$GALAXY_CONFIG_DIR/job_conf.xml \
 GALAXY_CONFIG_JOB_METRICS_CONFIG_FILE=$GALAXY_CONFIG_DIR/job_metrics_conf.xml \
 GALAXY_CONFIG_TOOL_DATA_TABLE_CONFIG_PATH=/etc/galaxy/tool_data_table_conf.xml \
+GALAXY_CONFIG_WATCH_TOOL_DATA_DIR=True \
 GALAXY_CONFIG_TOOL_DEPENDENCY_DIR=$EXPORT_DIR/tool_deps \
 GALAXY_CONFIG_TOOL_PATH=$EXPORT_DIR/galaxy-central/tools \
 GALAXY_VIRTUAL_ENV=/galaxy_venv \
@@ -63,7 +64,6 @@ RUN groupadd -r postgres -g $GALAXY_POSTGRES_GID && \
 RUN echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/02apt-speedup && \
     echo "Acquire::http {No-Cache=True;};" > /etc/apt/apt.conf.d/no-cache && \
     apt-get -qq update && apt-get install --no-install-recommends -y apt-transport-https software-properties-common wget && \
-    apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D && \
     sh -c "wget -qO - https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -" && \
     sh -c "echo deb http://research.cs.wisc.edu/htcondor/ubuntu/stable/ trusty contrib > /etc/apt/sources.list.d/htcondor.list" && \
     sh -c "wget -qO - http://research.cs.wisc.edu/htcondor/ubuntu/HTCondor-Release.gpg.key | sudo apt-key add -" && \
@@ -73,15 +73,15 @@ RUN echo "force-unsafe-io" > /etc/dpkg/dpkg.cfg.d/02apt-speedup && \
     apt-get update -qq && apt-get upgrade -y && \
     apt-get install --no-install-recommends -y postgresql-9.3 sudo python-virtualenv \
     nginx-extras=1.4.6-1ubuntu3.8ppa1 nginx-common=1.4.6-1ubuntu3.8ppa1 docker-ce=17.09.0~ce-0~ubuntu slurm-llnl slurm-llnl-torque \
-    slurm-drmaa-dev proftpd proftpd-mod-pgsql libyaml-dev nodejs-legacy npm ansible munge libmunge-dev \
+    slurm-drmaa-dev proftpd proftpd-mod-pgsql libyaml-dev ansible munge libmunge-dev \
     nano vim curl python-crypto python-pip python-psutil condor python-ldap autofs \
-    gridengine-common gridengine-drmaa1.0 rabbitmq-server libswitch-perl unattended-upgrades supervisor && \
+    gridengine-common gridengine-drmaa1.0 rabbitmq-server libswitch-perl unattended-upgrades supervisor samtools && \
     # install and remove supervisor, so get the service config file
     apt-get -qq remove -y supervisor && \
     apt-get purge -y software-properties-common && \
     apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && rm -rf ~/.cache/ && \
     mkdir -p /etc/supervisor/conf.d/ /var/log/supervisor/ && \
-    pip install --upgrade pip && \
+    pip install --upgrade pip setuptools && \
     pip install ephemeris supervisor --upgrade && \
     ln -s /usr/local/bin/supervisord /usr/bin/supervisord
 
@@ -102,7 +102,8 @@ RUN mkdir $GALAXY_ROOT && \
     mkdir -p $GALAXY_CONFIG_DIR $GALAXY_CONFIG_DIR/web && \
     chown -R $GALAXY_USER:$GALAXY_USER $GALAXY_CONFIG_DIR && \
     $GALAXY_VIRTUAL_ENV/bin/pip2 install pip --upgrade && \
-    $GALAXY_VIRTUAL_ENV/bin/pip2 install --extra-index-url https://wheels.galaxyproject.org/ uwsgi -v --pre && \
+    $GALAXY_VIRTUAL_ENV/bin/pip2 install --extra-index-url https://wheels.galaxyproject.org/ uwsgi==2.0.15 -v --pre && \
+    chown -R $GALAXY_USER:$GALAXY_USER $GALAXY_VIRTUAL_ENV && \
     rm -rf ~/.cache/
 
 RUN su $GALAXY_USER -c "cp $GALAXY_ROOT/config/galaxy.yml.sample $GALAXY_CONFIG_FILE"
@@ -113,8 +114,8 @@ ADD roles/ /ansible/roles
 ADD provision.yml /ansible/provision.yml
 ADD postgresql_provision.yml /ansible/postgresql_provision.yml
 
-RUN ansible-playbook /ansible/postgresql_provision.yml
-  RUN  ansible-playbook /ansible/provision.yml \
+RUN ansible-playbook /ansible/postgresql_provision.yml && \
+    ansible-playbook /ansible/provision.yml \
     --extra-vars galaxy_venv_dir=$GALAXY_VIRTUAL_ENV \
     --extra-vars galaxy_log_dir=$GALAXY_LOGS_DIR \
     --extra-vars galaxy_user_name=$GALAXY_USER \
@@ -131,13 +132,13 @@ RUN ansible-playbook /ansible/postgresql_provision.yml
     --extra-vars proftpd_files_dir=$EXPORT_DIR/ftp \
     --extra-vars proftpd_use_sftp=True \
     --extra-vars galaxy_extras_docker_legacy=False \
-    --extra-vars galaxy_minimum_version=17.09 \
+    --extra-vars galaxy_minimum_version=18.01 \
     --extra-vars nginx_upload_store_path=$EXPORT_DIR/nginx_upload_store \
     --extra-vars supervisor_postgres_config_path=$PG_CONF_DIR_DEFAULT/postgresql.conf \
     --extra-vars supervisor_postgres_autostart=false \
     --extra-vars nginx_use_remote_header=True \
-    --tags=galaxyextras,cvmfs -c local
- RUN   apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    --tags=galaxyextras,cvmfs -c local && \
+    apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN mkdir /shed_tools && chown $GALAXY_USER:$GALAXY_USER /shed_tools && \
     mkdir $EXPORT_DIR/ftp/ && chown $GALAXY_USER:$GALAXY_USER $EXPORT_DIR/ftp && \
@@ -193,6 +194,9 @@ RUN ./scripts/common_startup.sh && \
     # Install all required Node dependencies. This is required to get proxy support to work for Interactive Environments
     cd $GALAXY_ROOT/lib/galaxy/web/proxy/js && \
     npm install
+
+# the following can be removed with 18.01
+RUN /tool_deps/_conda/bin/conda create -y --override-channels --channel iuc --channel bioconda --channel conda-forge --channel defaults --channel r --name mulled-v1-eb2018fd3ce0fcbcee48a4bf89c57219add691c16729281b6c46b30f08339397 samtools=1.3.1 bcftools=1.5
 
 # Switch back to User root
 USER root
