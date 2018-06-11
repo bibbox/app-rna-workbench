@@ -20,4 +20,4 @@ services:
     image: quay.io/bgruening/galaxy-init:latest
     container_name: §§INSTANCE-galaxy-data
     volumes:
-      - data/galaxy-storage:/export
+      - ./data/galaxy-storage:/export
