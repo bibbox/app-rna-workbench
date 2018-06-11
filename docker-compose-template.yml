@@ -6,16 +6,14 @@ networks:
 
 services:
   §§INSTANCE-galaxy:
-    image: bgruening/galaxy-stable:latest # §§
+    image: bgruening/galaxy-stable:latest
     container_name: §§INSTANCE-galaxy
     networks:
         - bibbox-default-network
     volumes_from:
       - §§INSTANCE-galaxy-data
-    expose:
-        - 80
     ports:
-        - "§§PORT4:80"
+        - "§§PORT:80"
     restart: on-failure
 
   §§INSTANCE-galaxy-data:
