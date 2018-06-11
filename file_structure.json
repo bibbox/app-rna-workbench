@@ -1,6 +1,7 @@
 {
   "makefolders":[
-    "galaxy-storage"
+    "data",
+    "data/galaxy-storage"
   ],
   "copyfiles":[]
 }
