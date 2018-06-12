@@ -51,7 +51,7 @@ services:
 #    image: postgres
 # This comes with an initialization to quickly populate the database on first start
 #    build: postgres-galaxy
-    image: quay.io/galaxy/postgres:latest
+    image: quay.io/galaxy/postgres   
     container_name: §§INSTANCE-galaxy-postgres
     environment:
         - POSTGRES_PASSWORD=chaopagoosaequuashie
