@@ -19,8 +19,8 @@
       "proxy" : "PRIMARY"
     },
                {
-      "id": "§§PORT31",
-      "url": "§§INSTANCE-p30001",
+      "id": "§§PORT310",
+      "url": "§§INSTANCE-p300010",
       "protocol": "HTTP",
       "proxy" : "PRIMARY"
     },
@@ -73,8 +73,8 @@
       "proxy" : "PRIMARY"
     },
                {
-      "id": "§§PORT310",
-      "url": "§§INSTANCE-p30010",
+      "id": "§§PORT31",
+      "url": "§§INSTANCE-p3001",
       "protocol": "HTTP",
       "proxy" : "PRIMARY"
     },
