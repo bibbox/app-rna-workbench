@@ -46,7 +46,7 @@ services:
 
   §§INSTANCE-postgres:
 # Using the official postgres 
-. This needs to be populated by calling
+# This needs to be populated by calling
 #  docker-compose run galaxy install_db.sh
 # on first run
 #    image: postgres
