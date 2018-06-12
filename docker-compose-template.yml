@@ -45,13 +45,14 @@ services:
     hostname: §§INSTANCE-galaxy-proftpd
 
   §§INSTANCE-postgres:
-# Using the official postgres image. This needs to be populated by calling
+# Using the official postgres 
+. This needs to be populated by calling
 #  docker-compose run galaxy install_db.sh
 # on first run
 #    image: postgres
 # This comes with an initialization to quickly populate the database on first start
 #    build: postgres-galaxy
-    image: quay.io/bgruening/galaxy-postgres:latest 
+    image: quay.io/bgruening/galaxy-postgres:18.05
     container_name: §§INSTANCE-galaxy-postgres
     environment:
         - POSTGRES_PASSWORD=chaopagoosaequuashie
