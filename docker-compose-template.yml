@@ -67,7 +67,7 @@ services:
   # slurm container
   §§INSTANCE-slurm:
 #    build: slurm-galaxy
-    image: quay.io/bgruening/galaxy-slurm:${TAG:-latest}
+    image: quay.io/bgruening/galaxy-slurm:$latest
     environment: {}
     container_name: §§INSTANCE-galaxy-slurm
     volumes:
