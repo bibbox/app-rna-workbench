@@ -1,11 +1,11 @@
 {
-	"name": "Galaxy",
-	"short_name": "Galaxy",
+	"name": "Galaxy, RNA-workbench",
+	"short_name": "RNA-workbench",
 	"version": "18.05",
 	"description": "",
         "short_description": "",
 	"catalogue_url": "https://bio.tools/tool/Galaxy/version/none",
 	"application_url": "https://galaxyproject.org",
-	"tags": ["Galaxy"],
-	"application_documentation_url": "https://galaxyproject.org"
+	"tags": ["Galaxy"], ["RNA"]
+	"application_documentation_url": "https://github.com/bgruening/galaxy-rna-workbench/blob/master/README.md"
 }
