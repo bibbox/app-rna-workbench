@@ -6,6 +6,7 @@
 
     ![1](install-screen-01.jpg)
 
+But obviously the icon on the top left corner should say "Galaxy / RNA workbench" instead.
 
 ## After the installation
 
