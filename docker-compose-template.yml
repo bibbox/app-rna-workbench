@@ -52,7 +52,7 @@ services:
 #    image: postgres
 # This comes with an initialization to quickly populate the database on first start
 #    build: postgres-galaxy
-    image: quay.io/bgruening/galaxy-rna-workbench
+    image: quay.io/bgruening/galaxy-rna-workbench:18.01
     container_name: §§INSTANCE-galaxy-postgres
     environment:
         - POSTGRES_PASSWORD=chaopagoosaequuashie
